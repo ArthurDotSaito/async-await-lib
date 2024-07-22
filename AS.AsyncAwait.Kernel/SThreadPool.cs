@@ -4,8 +4,8 @@ namespace AS.AsyncAwait.Kernel;
 
 public static class SThreadPool
 {
-    private static readonly BlockingCollection<Action> _tasks = new();
-    public static void QueueTask(Action task) => _tasks.Add(task);
+    private static readonly BlockingCollection<(Action, ExecutionContext?)> s_workitems = new();
+    public static void QueueUserWorkItem(Action task) => s_workitems.Add((task, ExecutionContext.Capture()));
 
     static SThreadPool()
     {
@@ -15,7 +15,8 @@ public static class SThreadPool
             {
                 while (true)
                 {
-                    
+                    (Action workItem, ExecutionContext? context) = s_workitems.Take();
+                    workItem();
                 }
             }){IsBackground = true}.Start();
         }
