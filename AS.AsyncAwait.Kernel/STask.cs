@@ -1,4 +1,6 @@
-﻿namespace AS.AsyncAwait.Kernel;
+﻿using System.Runtime.ExceptionServices;
+
+namespace AS.AsyncAwait.Kernel;
 
 public class STask
 {
@@ -20,7 +22,24 @@ public class STask
 
     public void SetResult() => Complete(null);
     public void SetException(Exception exception) => Complete(exception);
-    public void Wait(){}
+
+    public void Wait()
+    {
+        ManualResetEventSlim? mres = null;
+        lock (this)
+        {
+            if (!_completed)
+            {
+                mres = new ManualResetEventSlim();
+                ContinueWith(mres.Set);
+            }
+        }
+
+        mres?.Wait();
+
+        if (_exception is not null)
+            ExceptionDispatchInfo.Throw(_exception);
+    }
 
     public void ContinueWith(Action continuation)
     {
