@@ -16,7 +16,15 @@ public static class SThreadPool
                 while (true)
                 {
                     (Action workItem, ExecutionContext? context) = s_workitems.Take();
-                    workItem();
+                    if (context is null)
+                    {
+                        workItem();
+                    }
+                    else
+                    {
+                        ExecutionContext.Run(context, state => ((Action)state!).Invoke(), workItem);
+                    }
+                    
                 }
             }){IsBackground = true}.Start();
         }
