@@ -18,8 +18,48 @@ public class STask
         }
     }
 
-    public void SetResult(){}
-    public void SetException(Exception exception){}
+    public void SetResult() => Complete(null);
+    public void SetException(Exception exception) => Complete(exception);
     public void Wait(){}
-    public void ContinueWith(Action continuation){}
+
+    public void ContinueWith(Action continuation)
+    {
+        lock (this)
+        {
+            if (_completed)
+            {
+                SThreadPool.QueueUserWorkItem(continuation);
+            }
+            else
+            {
+                _continuation = continuation;
+                _context = ExecutionContext.Capture();
+            }
+        }
+    }
+    private void Complete(Exception? exception)
+    {
+        lock (this)
+        {
+            if(_completed) throw new InvalidOperationException(" Task already completed");
+
+            _completed = true;
+            _exception = exception;
+
+            if (_continuation is not null)
+            {
+                SThreadPool.QueueUserWorkItem(delegate
+                {
+                    if (_context is null)
+                    {
+                        _continuation();
+                    }
+                    else
+                    {
+                        ExecutionContext.Run(_context, state => ((Action)state!).Invoke(), _continuation);
+                    }
+                });
+            }
+        }   
+    }
 }
