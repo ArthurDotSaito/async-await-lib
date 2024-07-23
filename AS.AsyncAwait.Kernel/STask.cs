@@ -20,7 +20,30 @@ public class STask
         }
     }
 
+    public static STask Run(Action action)
+    {
+        STask t = new STask();
+
+        SThreadPool.QueueUserWorkItem(() =>
+        {
+            try
+            {
+                action();
+            }
+            catch(Exception e)
+            {
+                t.SetException(e);
+                return;
+            }
+            
+            t.SetResult();
+        });
+        
+        return t;
+    }
+
     public void SetResult() => Complete(null);
+    
     public void SetException(Exception exception) => Complete(exception);
 
     public void Wait()
@@ -56,6 +79,7 @@ public class STask
             }
         }
     }
+    
     private void Complete(Exception? exception)
     {
         lock (this)
