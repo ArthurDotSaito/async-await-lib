@@ -68,6 +68,14 @@ public class STask
         
         return t;
     }
+    
+    public static STask Delay(int timeout)
+    {
+        STask t = new();
+        new Timer(_ => t.SetResult()).Change(timeout, -1);
+
+        return t;
+    }
 
     public void SetResult() => Complete(null);
     
@@ -91,20 +99,39 @@ public class STask
             ExceptionDispatchInfo.Throw(_exception);
     }
 
-    public void ContinueWith(Action continuation)
+    public STask ContinueWith(Action continuation)
     {
+        STask t = new();
+        
+        Action callback = () =>
+        {
+            try
+            {
+                continuation();
+            }
+            catch (Exception e)
+            {
+                t.SetException(e);
+                return;
+            }
+            
+            t.SetResult();
+        };
+        
         lock (this)
         {
             if (_completed)
             {
-                SThreadPool.QueueUserWorkItem(continuation);
+                SThreadPool.QueueUserWorkItem(callback);
             }
             else
             {
-                _continuation = continuation;
+                _continuation = callback;
                 _context = ExecutionContext.Capture();
             }
         }
+
+        return t;
     }
     
     private void Complete(Exception? exception)
