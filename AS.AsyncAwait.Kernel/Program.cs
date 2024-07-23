@@ -5,16 +5,19 @@ public class Program
     public static void Main(string[] args)
     {
         AsyncLocal<int> currentTask = new();
-        for(int i = 0; i < 1000; i++)
+        List<STask> tasks = new();
+        for(int i = 0; i < 100; i++)
         {
             currentTask.Value = i;
-            SThreadPool.QueueUserWorkItem(delegate
+            tasks.Add(STask.Run(() =>
             {
-                Console.WriteLine($"Task {currentTask.Value} started");
+                Console.WriteLine(currentTask.Value);
                 Thread.Sleep(1000);
-            });
+            }));
         }
-        Console.ReadLine();
+
+        STask.WhenAll(tasks).Wait();
+        
     }
 }
 

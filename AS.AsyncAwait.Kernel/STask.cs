@@ -42,6 +42,33 @@ public class STask
         return t;
     }
 
+    public static STask WhenAll(List<STask> tasks)
+    {
+        STask t = new();
+        
+        if(tasks.Count == 0)
+        {
+            t.SetResult();
+            return t;
+        }
+        
+        int remainingTasks = tasks.Count;
+        Action continuation = () =>
+        {
+            if (Interlocked.Decrement(ref remainingTasks) == 0)
+            {
+                t.SetResult();
+            }
+        };
+        
+        foreach (var task in tasks)
+        {
+            task.ContinueWith(continuation);
+        }
+        
+        return t;
+    }
+
     public void SetResult() => Complete(null);
     
     public void SetException(Exception exception) => Complete(exception);
