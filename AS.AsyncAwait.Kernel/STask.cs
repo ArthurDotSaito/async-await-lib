@@ -1,4 +1,5 @@
-﻿using System.Runtime.ExceptionServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 
 namespace AS.AsyncAwait.Kernel;
 
@@ -9,6 +10,16 @@ public class STask
     private Action? _continuation;
     private ExecutionContext? _context;
 
+    public struct Awaiter(STask t) : INotifyCompletion
+    {   
+        public Awaiter GetAwaiter() => this;
+        public bool IsCompleted => t.IsCompleted;
+        public void OnCompleted(Action continuation) => t.ContinueWith(continuation);
+        public void GetResult() => t.Wait();
+    }
+
+    public Awaiter GetAwaiter() => new Awaiter(this);
+    
     public bool IsCompleted
     {
         get
@@ -203,4 +214,36 @@ public class STask
             }
         }   
     }
+
+    public static STask Iterate(IEnumerable<STask> tasks)
+    {
+        STask t = new();
+
+        IEnumerator<STask> e = tasks.GetEnumerator();
+        
+        void MoveNext()
+        {
+            try
+            {
+                if (e.MoveNext())
+                {
+                    STask next = e.Current;
+                    next.ContinueWith(MoveNext);
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                t.SetException(e);
+                return;
+            }
+            
+            t.SetResult();
+        }
+        
+        MoveNext();
+        
+        return t;
+    }
+    
 }
