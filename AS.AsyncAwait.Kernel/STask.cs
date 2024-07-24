@@ -42,6 +42,41 @@ public class STask
         return t;
     }
 
+    public static STask WhenAll(List<STask> tasks)
+    {
+        STask t = new();
+        
+        if(tasks.Count == 0)
+        {
+            t.SetResult();
+            return t;
+        }
+        
+        int remainingTasks = tasks.Count;
+        Action continuation = () =>
+        {
+            if (Interlocked.Decrement(ref remainingTasks) == 0)
+            {
+                t.SetResult();
+            }
+        };
+        
+        foreach (var task in tasks)
+        {
+            task.ContinueWith(continuation);
+        }
+        
+        return t;
+    }
+    
+    public static STask Delay(int timeout)
+    {
+        STask t = new();
+        new Timer(_ => t.SetResult()).Change(timeout, -1);
+
+        return t;
+    }
+
     public void SetResult() => Complete(null);
     
     public void SetException(Exception exception) => Complete(exception);
@@ -64,20 +99,83 @@ public class STask
             ExceptionDispatchInfo.Throw(_exception);
     }
 
-    public void ContinueWith(Action continuation)
+    public STask ContinueWith(Action continuation)
     {
+        STask t = new();
+        
+        Action callback = () =>
+        {
+            try
+            {
+                continuation();
+            }
+            catch (Exception e)
+            {
+                t.SetException(e);
+                return;
+            }
+            
+            t.SetResult();
+        };
+        
         lock (this)
         {
             if (_completed)
             {
-                SThreadPool.QueueUserWorkItem(continuation);
+                SThreadPool.QueueUserWorkItem(callback);
             }
             else
             {
-                _continuation = continuation;
+                _continuation = callback;
                 _context = ExecutionContext.Capture();
             }
         }
+
+        return t;
+    }
+    
+    public STask ContinueWith(Func<STask> continuation)
+    {
+        STask t = new();
+        
+        Action callback = () =>
+        {
+            try
+            {
+                STask next = continuation();
+                next.ContinueWith(delegate
+                {
+                    if (next._exception is not null)
+                    {
+                        t.SetException(next._exception);
+                    }
+                    else
+                    {
+                        t.SetResult();
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                t.SetException(e);
+                return;
+            }
+        };
+        
+        lock (this)
+        {
+            if (_completed)
+            {
+                SThreadPool.QueueUserWorkItem(callback);
+            }
+            else
+            {
+                _continuation = callback;
+                _context = ExecutionContext.Capture();
+            }
+        }
+
+        return t;
     }
     
     private void Complete(Exception? exception)
