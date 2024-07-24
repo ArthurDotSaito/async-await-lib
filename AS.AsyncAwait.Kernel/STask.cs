@@ -134,6 +134,50 @@ public class STask
         return t;
     }
     
+    public STask ContinueWith(Func<STask> continuation)
+    {
+        STask t = new();
+        
+        Action callback = () =>
+        {
+            try
+            {
+                STask next = continuation();
+                next.ContinueWith(delegate
+                {
+                    if (next._exception is not null)
+                    {
+                        t.SetException(next._exception);
+                    }
+                    else
+                    {
+                        t.SetResult();
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                t.SetException(e);
+                return;
+            }
+        };
+        
+        lock (this)
+        {
+            if (_completed)
+            {
+                SThreadPool.QueueUserWorkItem(callback);
+            }
+            else
+            {
+                _continuation = callback;
+                _context = ExecutionContext.Capture();
+            }
+        }
+
+        return t;
+    }
+    
     private void Complete(Exception? exception)
     {
         lock (this)
