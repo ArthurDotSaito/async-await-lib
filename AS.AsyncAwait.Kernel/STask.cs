@@ -203,4 +203,36 @@ public class STask
             }
         }   
     }
+
+    public static STask Iterate(IEnumerable<STask> tasks)
+    {
+        STask t = new();
+
+        IEnumerator<STask> e = tasks.GetEnumerator();
+        
+        void MoveNext()
+        {
+            try
+            {
+                if (e.MoveNext())
+                {
+                    STask next = e.Current;
+                    next.ContinueWith(MoveNext);
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                t.SetException(e);
+                return;
+            }
+            
+            t.SetResult();
+        }
+        
+        MoveNext();
+        
+        return t;
+    }
+    
 }
