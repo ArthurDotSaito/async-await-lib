@@ -2,22 +2,13 @@
 
 public class Program
 {
-    public static void Main(string[] args)
+    static async Task PrintSTask()
     {
-        AsyncLocal<int> currentTask = new();
-        List<STask> tasks = new();
-        for(int i = 0; i < 100; i++)
+        for (int i = 0;; i++)
         {
-            currentTask.Value = i;
-            tasks.Add(STask.Run(() =>
-            {
-                Console.WriteLine(currentTask.Value);
-                Thread.Sleep(1000);
-            }));
+            await STask.Delay(1000);
+            Console.WriteLine(i);
         }
-
-        STask.WhenAll(tasks).Wait();
-        
     }
 }
 
