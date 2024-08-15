@@ -51,6 +51,9 @@ inside the Lambda expression passed as an argument to the `Run()` method will be
 `ExecutionContext` passed as an argument. After the execution of the code inside the Lambda expression, the system will
 restore the call stack of the current thread with the information stored into the Thread Local Storage before the call.
 
+In short terms, `ExecutionContext.Run()` allows us to execute a piece of code in a thread, but with the call stack of another thread.
+This is possible because the `ExecutionContext` captured before the `Run()` method is called is stored into the Thread Local Storage.
+
 ## Back to SThreadPool
 
 Okay,so the SThreadPool is just a `while(true)` loop that will take things from the `BlockingCollection` and execute it.
