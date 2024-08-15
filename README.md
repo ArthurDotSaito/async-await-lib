@@ -56,5 +56,16 @@ This is possible because the `ExecutionContext` captured before the `Run()` meth
 
 ## Back to SThreadPool
 
-Okay,so the SThreadPool is just a `while(true)` loop that will take things from the `BlockingCollection` and execute it.
+So, the `BlockingCollection` will store many `Action` and the correspondent `ExecutionContext`. 
+
+In this example, we are instantiating a fixed number of threads based on the number of processors in the machine. Obviously,
+this is not the best way to do this, but for now, it's enough. This threads will be responsible for taking things from the
+`BlockingCollection` and execute it. These threads will be background threads and will be running until the application is
+closed and will not prevent the application from being finished.
+
+After this, the SThreadPool is just a `while(true)` loop that will take things from the `BlockingCollection` and execute it. If there's 
+no context, so we just need to execute the `Action` itself. If there's a context, so we need to execute the `Action` with
+the context, and we do this with the `ExecutionContext.Run()` method. 
+
+
 
