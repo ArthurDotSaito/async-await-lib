@@ -25,7 +25,7 @@ until there's something to take out (Essentially, the thread is blocked). We wan
 will try to take things from this collection to process it, and if there's nothing, it will wait until there's something
 to process.
 
-Into the `BlockingCollection`, we will store many `Actions`.
+Into the `BlockingCollection`, we will store many `Actions` and the correspondent `ExecutionContext`.
 
 ### Actions && Delegate
 
@@ -37,6 +37,19 @@ is a pointer to a method that can be invoked. When we execute a delegate, we are
 
 The `Action` is just a kind of delegate that represents a method that takes no parameters and returns void. Simple like
 this.
+
+### ExecutionContext
+
+The ExecutionContext is a class that provides a way to capture and transfer the execution context. The data captured are
+things like current culture, and the thread call stack. Each thread has its call stack to register the functions executed 
+and the ExecutionContext captures this information and allows us to transfer it to another thread, using the Thread Local
+Storage. When we call the `ExecutionContext.Capture` method, it will return a new instance of the ExecutionContext with information
+of the call stack of the current thread and store it into the Thread Local Storage. At the moment whe call `ExecutionContext.Run`,
+the system will search method into the current thread TLS the `ExecutionContext` passed as an argument to the `Run()`.
+So, we restore the call stack of the current thread with the information stored into the Thread Local Storage. The code 
+inside the Lambda expression passed as an argument to the `Run()` method will be executed with the call stack of the 
+`ExecutionContext` passed as an argument. After the execution of the code inside the Lambda expression, the system will
+restore the call stack of the current thread with the information stored into the Thread Local Storage before the call.
 
 ## Back to SThreadPool
 
