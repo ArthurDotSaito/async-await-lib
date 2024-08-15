@@ -35,4 +35,10 @@ Delegate is a type that represents references to methods with a particular param
 is a pointer to a method that can be invoked. When we execute a delegate, we are invoking the method that it points to.
 (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/)
 
+The `Action` is just a kind of delegate that represents a method that takes no parameters and returns void. Simple like
+this.
+
+## Back to SThreadPool
+
+Okay,so the SThreadPool is just a `while(true)` loop that will take things from the `BlockingCollection` and execute it.
 
