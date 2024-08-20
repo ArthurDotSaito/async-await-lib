@@ -74,16 +74,20 @@ two things: Executing a action or waiting for a action to be added to the `Block
 the threads. So it's very desirable to have a way to queue the work and then, have some object that represents the work, in 
 a way that we can wait for the work to be finished. This is the `Task` class.
 
+### STask.Run()
+
+The `Run()` method basically starts the asynchronous task. It accepts a delegate Action as a argument and execute 
+this action in a thread from the `SThreadPool` - we are queuing the action into the `BlockingCollection` to another thread
+execute it, and then we are freeing the thread that called the `Run()` method to do other things. 
+
 ### STask.ContinueWith()
 
-Let's start with the `ContinueWith(Action continuation)` method. 
+Let's start with the `ContinueWith(Action continuation)` method. This method basically 
 
 
 ### STask.Complete()
 
 ### STask.SetResult() && STask.SetException()
 
-### STask.Run()
 
-The `Run()` method basically creates a new `STask` object
 
