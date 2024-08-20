@@ -84,10 +84,26 @@ execute it, and then we are freeing the thread that called the `Run()` method to
 
 Basically, to a class use the 'await' keyword in C# it needs to implement the `GetAwaiter()` method. This method returns
 an object that implements the `INotifyCompletion` interface. This interface has three main methods: `OnCompleted()`,
-`GetResult()` and `IsCompleted()`. The IsCompleted basically returns `true` if the task is complete and `false` otherwise.
-This is used by the compiler to determine if is necessary to await the task conclusion or it's possible to continue the
-execution of the code. The `OnCompleted()` method is called when the task is not completed but needs to be awaited, and 
-receives 
+`GetResult()` and `IsCompleted()`. 
+
+The `IsCompleted` basically returns `true` if the task is complete and `false` otherwise. This is used by the compiler 
+to determine if is necessary to await the task conclusion or it's possible to continue the execution of the code. 
+
+The `OnCompleted()` method is called when the task is not completed (IsCompleted == false, otherwise the compiler will not
+call this method, because is possible to continue the execution of the code). This method receives a `Action` as a parameter
+and this action represents the code that should be executed when the task is completed. This action is stored into the
+`INotifyCompletion` object, an the `OnCompleted()` method delegates the execution of this action to the `ContinueWith()`
+inside the same STask instance. The `ContinueWith()` method will register this Action to be executed when the task is
+completed, and if the task is already completed, the action is executed immediately.
+
+The `GetResult()` method is called by the compiler when the task is completed and the `await` keyword is used. This method
+returns the result of the task or a exception if the task has thrown a exception. In this case, we use the method `Wait()`
+that blocks the current thread until the task is completed and then returns the result of the task or throws the exception.
+
+So, the `GetAwaiter()` method encapsulates the logic of the 'Wait'. When we use the `await` keyword, the compiler will
+invoke the `GetAwaiter()` method and then the `OnCompleted()` method. The compiler basically uses the `Awaiter` to determine
+if is necessary wait for the task conclusion (`IsCompleted()`), register the code to be executed when the task is completed
+(`OnCompleted()`) and get the result of the task (`GetResult()`).
 
 ### STask.ContinueWith()
 
