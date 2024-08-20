@@ -67,10 +67,20 @@ After this, the SThreadPool is just a `while(true)` loop that will take things f
 no context, so we just need to execute the `Action` itself. If there's a context, so we need to execute the `Action` with
 the context, and we do this with the `ExecutionContext.Run()` method. 
 
-# Task
+# STask
 
 Unfortunately, the threads in `SThreadPool` class are all long running threads, so they never finish. They are always doing 
 two things: Executing a action or waiting for a action to be added to the `BlockingCollection`. So there's no way to Join
-the threads. 
+the threads. So it's very desirable to have a way to queue the work and then, have some object that represents the work, in 
+a way that we can wait for the work to be finished. This is the `Task` class.
 
+### STask.ContinueWith()
+
+### STask.Complete()
+
+### STask.SetResult() && STask.SetException()
+
+### STask.Run()
+
+The `Run()` method basically creates a new `STask` object
 
