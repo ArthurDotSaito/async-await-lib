@@ -67,5 +67,10 @@ After this, the SThreadPool is just a `while(true)` loop that will take things f
 no context, so we just need to execute the `Action` itself. If there's a context, so we need to execute the `Action` with
 the context, and we do this with the `ExecutionContext.Run()` method. 
 
+# Task
+
+Unfortunately, the threads in `SThreadPool` class are all long running threads, so they never finish. They are always doing 
+two things: Executing a action or waiting for a action to be added to the `BlockingCollection`. So there's no way to Join
+the threads. 
 
 
