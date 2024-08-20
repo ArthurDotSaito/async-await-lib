@@ -76,6 +76,9 @@ a way that we can wait for the work to be finished. This is the `Task` class.
 
 ### STask.ContinueWith()
 
+Let's start with the `ContinueWith(Action continuation)` method. 
+
+
 ### STask.Complete()
 
 ### STask.SetResult() && STask.SetException()
