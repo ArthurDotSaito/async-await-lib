@@ -80,6 +80,15 @@ The `Run()` method basically starts the asynchronous task. It accepts a delegate
 this action in a thread from the `SThreadPool` - we are queuing the action into the `BlockingCollection` to another thread
 execute it, and then we are freeing the thread that called the `Run()` method to do other things. 
 
+### STask.GetAwaiter()
+
+Basically, to a class use the 'await' keyword in C# it needs to implement the `GetAwaiter()` method. This method returns
+an object that implements the `INotifyCompletion` interface. This interface has three main methods: `OnCompleted()`,
+`GetResult()` and `IsCompleted()`. The IsCompleted basically returns `true` if the task is complete and `false` otherwise.
+This is used by the compiler to determine if is necessary to await the task conclusion or it's possible to continue the
+execution of the code. The `OnCompleted()` method is called when the task is not completed but needs to be awaited, and 
+receives 
+
 ### STask.ContinueWith()
 
 Let's start with the `ContinueWith(Action continuation)` method. This method basically 
